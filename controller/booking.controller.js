@@ -1,11 +1,15 @@
-import { errorHandler, responseHandler } from "../middlewares/responseHandler";
-import Booking from "../models/Booking.model";
-import Flight from "../models/flight.model";
+import {
+  errorHandler,
+  responseHandler,
+} from "../middlewares/responseHandler.js";
+import Booking from "../models/Booking.model.js";
+import Flight from "../models/flight.model.js";
 
 export const createBooking = async (req, res) => {
   try {
-    const { userId, flightId, numberOfSeats } = req.body;
-    if (!userId || !flightId || !numberOfSeats || !totalPrice) {
+    const { flightId, numberOfSeats } = req.body;
+    const userId = req.user.id;
+    if (!flightId || !numberOfSeats) {
       return responseHandler(res, 400, "All fields are required", false);
     }
     const flight = await Flight.findById(flightId);
@@ -17,7 +21,7 @@ export const createBooking = async (req, res) => {
     }
     const totalPrice = flight.price * numberOfSeats;
     const booking = new Booking({
-      userId: req.user.id,
+      userId,
       flightId,
       numberOfSeats,
       totalPrice,
@@ -49,9 +53,14 @@ export const getAllBookings = async (req, res) => {
 
 export const getUserBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find({ userId: req.user.id }).populate(
-      "flightId"
-    );
+    const userId = req.user.id; // Get user ID from the authentication middleware
+    console.log("zid", userId);
+    const bookings = await Booking.find({ userId }).populate("flightId");
+
+    if (!bookings) {
+      return responseHandler(res, 404, "Bookings not found", false);
+    }
+
     return responseHandler(res, 200, "Bookings fetched successfully", true, {
       bookings,
     });
