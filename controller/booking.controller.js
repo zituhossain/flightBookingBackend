@@ -4,14 +4,72 @@ import {
 } from "../middlewares/responseHandler.js";
 import Booking from "../models/Booking.model.js";
 import Flight from "../models/flight.model.js";
+import nodemailer from "nodemailer";
+
+// export const createBooking = async (req, res) => {
+//   try {
+//     const { flightId, numberOfSeats } = req.body;
+//     const userId = req.user.id;
+//     if (!flightId || !numberOfSeats) {
+//       return responseHandler(res, 400, "All fields are required", false);
+//     }
+//     const flight = await Flight.findById(flightId);
+//     if (!flight) {
+//       return responseHandler(res, 404, "Flight not found", false);
+//     }
+//     if (flight.availableSeats < numberOfSeats) {
+//       return responseHandler(res, 400, "Not enough seats available", false);
+//     }
+//     const totalPrice = flight.price * numberOfSeats;
+//     const booking = new Booking({
+//       userId,
+//       flightId,
+//       numberOfSeats,
+//       totalPrice,
+//       bookingStatus: "confirmed",
+//     });
+//     flight.availableSeats -= numberOfSeats;
+
+//     await booking.save();
+//     await flight.save();
+
+//     return responseHandler(res, 201, "Booking created successfully", true, {
+//       booking,
+//     });
+//   } catch (error) {
+//     return errorHandler(res, error);
+//   }
+// };
+
+const sendBookingConfirmationEmail = async (userEmail, bookingDetails) => {
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: process.env.EMAIL_USER, // Your email
+      pass: process.env.EMAIL_PASS, // Your email password
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: userEmail,
+    subject: "Flight Booking Confirmation",
+    text: `Your booking has been confirmed for flight ${bookingDetails.flightId}.`,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
 
 export const createBooking = async (req, res) => {
   try {
-    const { flightId, numberOfSeats } = req.body;
+    const { flightId, numberOfSeats, travelDate } = req.body; // Added travelDate
     const userId = req.user.id;
-    if (!flightId || !numberOfSeats) {
+
+    if (!numberOfSeats || !travelDate) {
+      // Validate travelDate
       return responseHandler(res, 400, "All fields are required", false);
     }
+
     const flight = await Flight.findById(flightId);
     if (!flight) {
       return responseHandler(res, 404, "Flight not found", false);
@@ -19,18 +77,23 @@ export const createBooking = async (req, res) => {
     if (flight.availableSeats < numberOfSeats) {
       return responseHandler(res, 400, "Not enough seats available", false);
     }
+
     const totalPrice = flight.price * numberOfSeats;
     const booking = new Booking({
       userId,
       flightId,
       numberOfSeats,
       totalPrice,
+      travelDate, // Store the travel date
       bookingStatus: "confirmed",
     });
-    flight.availableSeats -= numberOfSeats;
 
+    flight.availableSeats -= numberOfSeats;
     await booking.save();
     await flight.save();
+
+    // Send booking confirmation email
+    await sendBookingConfirmationEmail(req.user.email, booking);
 
     return responseHandler(res, 201, "Booking created successfully", true, {
       booking,

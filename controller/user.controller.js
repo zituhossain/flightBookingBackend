@@ -8,6 +8,7 @@ import {
 import User from "../models/user.model.js";
 
 export const register = async (req, res) => {
+  console.log(req.body);
   const errors = validationResult(req);
   if (!errors.isEmpty())
     return responseHandler(res, 400, errors.array()[0].msg, false);
@@ -56,6 +57,17 @@ export const login = async (req, res) => {
       expiresIn: "1d",
     });
     return responseHandler(res, 200, "Login successful", true, { user, token });
+  } catch (error) {
+    return errorHandler(res, error);
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.status(200).clearCookie("token").json({
+      message: "Logout successful",
+      success: true,
+    });
   } catch (error) {
     return errorHandler(res, error);
   }
