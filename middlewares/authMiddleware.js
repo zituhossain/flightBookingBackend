@@ -18,6 +18,7 @@ export const authMiddleware = async (req, res, next) => {
       });
     }
     req.user = await User.findById(decode.id).select("-password");
+    req.id = decode.id;
     next();
   } catch (error) {
     console.log(error);

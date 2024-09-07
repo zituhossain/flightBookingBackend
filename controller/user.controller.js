@@ -72,3 +72,36 @@ export const logout = async (req, res) => {
     return errorHandler(res, error);
   }
 };
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { username, email, phoneNumber } = req.body;
+
+    const userId = req.id;
+    let user = await User.findById(userId);
+    console.log("zuser", user);
+    if (!user) {
+      return responseHandler(res, 404, "User not found", false);
+    }
+
+    // updating data
+    if (username) user.username = username;
+    if (email) user.email = email;
+    if (phoneNumber) user.phoneNumber = phoneNumber;
+
+    await user.save();
+
+    user = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    };
+
+    return responseHandler(res, 200, "Profile updated successfully", true, {
+      user,
+    });
+  } catch (error) {
+    return errorHandler(res, error);
+  }
+};

@@ -8,9 +8,17 @@ import moment from "moment";
 
 export const getAllFlights = async (req, res) => {
   try {
-    const flights = await Flight.find();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const flights = await Flight.find().skip(skip).limit(limit);
+    const totalFlights = await Flight.countDocuments();
+
     return responseHandler(res, 200, "Flights fetched successfully", true, {
       flights,
+      totalPages: Math.ceil(totalFlights / limit),
+      currentPage: page,
     });
   } catch (error) {
     return errorHandler(res, error);
@@ -86,7 +94,7 @@ export const addFlight = async (req, res) => {
       airline,
       origin,
       destination,
-      date: adjustedDate, // Save adjusted date
+      date: adjustedDate,
       time,
       price,
       availableSeats,
