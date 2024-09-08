@@ -62,11 +62,10 @@ const sendBookingConfirmationEmail = async (userEmail, bookingDetails) => {
 
 export const createBooking = async (req, res) => {
   try {
-    const { flightId, numberOfSeats, travelDate } = req.body; // Added travelDate
+    const { flightId, numberOfSeats, seatClass = "Economy" } = req.body;
     const userId = req.user.id;
 
-    if (!numberOfSeats || !travelDate) {
-      // Validate travelDate
+    if (!numberOfSeats || !seatClass) {
       return responseHandler(res, 400, "All fields are required", false);
     }
 
@@ -78,13 +77,20 @@ export const createBooking = async (req, res) => {
       return responseHandler(res, 400, "Not enough seats available", false);
     }
 
-    const totalPrice = flight.price * numberOfSeats;
+    // Determine price multiplier based on seat class
+    let priceMultiplier = 1; // Default multiplier for Economy
+    if (seatClass === "Business") priceMultiplier = 1.5;
+    if (seatClass === "First Class") priceMultiplier = 2;
+
+    // Calculate total price
+    const totalPrice = flight.price * numberOfSeats * priceMultiplier;
+
     const booking = new Booking({
       userId,
       flightId,
       numberOfSeats,
+      seatClass,
       totalPrice,
-      travelDate, // Store the travel date
       bookingStatus: "confirmed",
     });
 

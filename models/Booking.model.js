@@ -12,15 +12,17 @@ const bookingSchema = new mongoose.Schema({
     required: true,
   },
   numberOfSeats: { type: Number, required: true },
+  seatClass: {
+    type: String,
+    enum: ["Economy", "Business", "First Class"], // Seat class enum
+    default: "Economy",
+    required: true,
+  },
   totalPrice: { type: Number, required: true },
   bookingStatus: {
     type: String,
     enum: ["pending", "confirmed", "cancelled"],
     default: "pending",
-  },
-  travelDate: {
-    type: Date,
-    required: true,
   },
 });
 

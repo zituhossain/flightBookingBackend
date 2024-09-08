@@ -41,23 +41,34 @@ export const getFlightById = async (req, res) => {
 
 export const searchFlights = async (req, res) => {
   const { origin, destination, date } = req.query;
-  // Ensure the date is valid
-  const flightDate = new Date(date);
-  if (!isValid(flightDate)) {
-    return responseHandler(res, 400, "Invalid flight date", false);
+
+  // Build the search criteria object
+  const searchCriteria = {};
+
+  // Add origin and destination to search criteria (case-insensitive)
+  if (origin) {
+    searchCriteria.origin = { $regex: new RegExp(origin, "i") }; // 'i' flag for case-insensitive search
+  }
+  if (destination) {
+    searchCriteria.destination = { $regex: new RegExp(destination, "i") };
+  }
+
+  // Only add the date to the search criteria if it's valid and provided
+  if (date) {
+    const flightDate = new Date(date);
+    if (!isValid(flightDate)) {
+      return responseHandler(res, 400, "Invalid flight date", false);
+    }
+    searchCriteria.date = flightDate;
   }
 
   try {
-    const flights = await Flight.find({
-      origin,
-      destination,
-      date: flightDate,
-    });
+    const flights = await Flight.find(searchCriteria);
     if (flights.length === 0) {
       return responseHandler(res, 404, "Flights not found", false);
     }
 
-    return responseHandler(res, 200, "Flights Searched successfully", true, {
+    return responseHandler(res, 200, "Flights searched successfully", true, {
       flights,
     });
   } catch (error) {
