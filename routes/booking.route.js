@@ -28,4 +28,5 @@ router.delete(
   deleteBooking
 );
 
+// router.post("/cancleBooking/:id", authMiddleware, cancelBooking);
 export default router;

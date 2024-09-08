@@ -103,6 +103,11 @@ export const createBooking = async (req, res) => {
     // Calculate total price
     const totalPrice = flight.price * numberOfSeats * priceMultiplier;
 
+    // const cancellationWindow = 24 * 60 * 60 * 1000;
+    // const cancellationAllowedUntil = new Date(
+    //   flight.date.getTime() - cancellationWindow
+    // );
+
     const booking = new Booking({
       userId,
       flightId,
@@ -110,6 +115,7 @@ export const createBooking = async (req, res) => {
       seatClass,
       totalPrice,
       bookingStatus: "confirmed",
+      // cancellationAllowedUntil,
     });
 
     flight.availableSeats -= numberOfSeats;
@@ -117,7 +123,7 @@ export const createBooking = async (req, res) => {
     await flight.save();
 
     // Send booking confirmation email
-    await sendBookingConfirmationEmail(req.user.email, booking, flight);
+    // await sendBookingConfirmationEmail(req.user.email, booking, flight);
 
     return responseHandler(res, 201, "Booking created successfully", true, {
       booking,
@@ -185,3 +191,38 @@ export const deleteBooking = async (req, res) => {
     return errorHandler(res, error);
   }
 };
+
+// export const cancelBooking = async (req, res) => {
+//   try {
+//     const { bookingId } = req.params;
+//     const userId = req.user.id;
+
+//     const booking = await Booking.findOne({ _id: bookingId, userId }).populate(
+//       "flightId"
+//     );
+//     if (!booking) {
+//       return responseHandler(res, 404, "Booking not found", false);
+//     }
+
+//     // Check if the booking is within the cancellation window
+//     const currentDateTime = new Date();
+//     if (currentDateTime > booking.cancellationAllowedUntil) {
+//       return responseHandler(
+//         res,
+//         400,
+//         "Cancellation time frame has passed",
+//         false
+//       );
+//     }
+
+//     // Update booking status
+//     booking.bookingStatus = "cancelled";
+//     booking.flightId.availableSeats += booking.numberOfSeats; // Refund seats
+//     await booking.save();
+//     await booking.flightId.save();
+
+//     return responseHandler(res, 200, "Booking cancelled successfully", true);
+//   } catch (error) {
+//     return errorHandler(res, error);
+//   }
+// };
