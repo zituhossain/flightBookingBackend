@@ -41,7 +41,11 @@ import nodemailer from "nodemailer";
 //   }
 // };
 
-const sendBookingConfirmationEmail = async (userEmail, bookingDetails) => {
+const sendBookingConfirmationEmail = async (
+  userEmail,
+  bookingDetails,
+  flightDetails
+) => {
   const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -54,7 +58,21 @@ const sendBookingConfirmationEmail = async (userEmail, bookingDetails) => {
     from: process.env.EMAIL_USER,
     to: userEmail,
     subject: "Flight Booking Confirmation",
-    text: `Your booking has been confirmed for flight ${bookingDetails.flightId}.`,
+    text: `
+      Your booking has been confirmed!
+      
+      Booking Details:
+      - Flight: ${flightDetails.flightNumber}
+      - From: ${flightDetails.origin} to ${flightDetails.destination}
+      - Date & Time: ${new Date(flightDetails.date).toDateString()} - ${
+      flightDetails.time
+    }
+      - Seat Class: ${bookingDetails.seatClass}
+      - Number of Seats: ${bookingDetails.numberOfSeats}
+      - Total Price: ${bookingDetails.totalPrice} BDT
+      
+      Thank you for choosing us. Have a great trip!
+    `,
   };
 
   await transporter.sendMail(mailOptions);
@@ -99,7 +117,7 @@ export const createBooking = async (req, res) => {
     await flight.save();
 
     // Send booking confirmation email
-    await sendBookingConfirmationEmail(req.user.email, booking);
+    await sendBookingConfirmationEmail(req.user.email, booking, flight);
 
     return responseHandler(res, 201, "Booking created successfully", true, {
       booking,
