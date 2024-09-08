@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: "https://flight-booking-mu.vercel.app/",
+  origin: "https://flight-booking-mu.vercel.app",
   credentials: true,
   optionsSuccessStatus: 200,
 };
