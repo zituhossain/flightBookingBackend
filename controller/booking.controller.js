@@ -123,7 +123,7 @@ export const createBooking = async (req, res) => {
     await flight.save();
 
     // Send booking confirmation email
-    // await sendBookingConfirmationEmail(req.user.email, booking, flight);
+    await sendBookingConfirmationEmail(req.user.email, booking, flight);
 
     return responseHandler(res, 201, "Booking created successfully", true, {
       booking,
